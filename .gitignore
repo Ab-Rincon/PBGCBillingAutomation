@@ -1,0 +1,10 @@
+
+*.pyc
+*.toc
+build/main/warn-main.txt
+myenv/
+*.log
+build/
+main.spec
+dist/
+directory_structure.txt
