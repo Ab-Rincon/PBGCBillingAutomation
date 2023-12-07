@@ -53,17 +53,21 @@ jobs:
   
     - name: Install dependencies
       run: pip install -r config/requirements.txt
-  
+
     - name: Build Executable
-      run: pyinstaller --onefile --name PBGC_Billing_Automation --add-data "config/sheet_template.xlsx;config/" --add-data "input;input" --add-data "output;output" --add-data "readMe.md;." main.py
-   
+      run: |
+        pyinstaller --onefile --name PBGC_Billing_Automation --add-data "config/sheet_template.xlsx;config/" --add-data "input;input" --add-data "output;output" --add-data "readMe.md;." main.py
+        dir dist /s # Debugging: List contents of dist directory
+
     - name: Create Release Directory
-      run: mkdir -p release
-      shell: pwsh
-    
+      run: |
+        mkdir release
+        dir # Debugging: List contents of the working directory
+
     - name: Zip Dist Folder
-      run: Compress-Archive -Path dist -DestinationPath release/dist.zip
-      shell: pwsh
+      run: |
+        Compress-Archive -Path dist -DestinationPath release/dist.zip
+        dir release # Debugging: List contents of release directory
 
     - name: Upload Dist Zip as Artifact
       uses: actions/upload-artifact@v3
