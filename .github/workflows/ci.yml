@@ -1,0 +1,40 @@
+name: PBGC Automation CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  lint:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+    - name: Install dependencies
+      run: pip install -r config/requirements.txt
+
+    - name: Lint with flake8
+      run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      
+build:
+  needs: lint
+  runs-on: windows-latest
+  steps:
+  - uses: actions/checkout@v2
+  - name: Set up Python
+    uses: actions/setup-python@v2
+    with:
+      python-version: 3.11
+  - name: Install PyInstaller
+    run: pip install pyinstaller
+  - name: Build Executable
+    run: pyinstaller --onefile main.py
+  - name: Upload Executable as Artifact
+    uses: actions/upload-artifact@v2
+    with:
+      name: pbgc-billing-automation
+      path: dist/main.exe

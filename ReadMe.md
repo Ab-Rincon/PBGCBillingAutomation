@@ -23,6 +23,9 @@ Follow these steps to process your invoice workbook using the provided applicati
    - Find `logfile.log` in the `dist` directory to review any operational logs for errors or confirmation of successful processing.
    - If you experience any issues, the log file may contain details that can help in troubleshooting.
 
+## Requirements
+ - It's necessary to have excel installed prior to running the application.
+
 ## Developer Section
 
 ### To-Do List
