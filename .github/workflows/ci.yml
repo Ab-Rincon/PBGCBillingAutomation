@@ -58,10 +58,8 @@ jobs:
       run: pyinstaller --onefile --name PBGC_Billing_Automation --add-data "config/sheet_template.xlsx;config/" --add-data "input;input" --add-data "output;output" --add-data "readMe.md;." main.py
    
     - name: Zip Dist Folder
-      run: |
-        mkdir -p release
-        zip -r release/dist.zip dist
-      working-directory: ${{ github.workspace }}
+      run: Compress-Archive -Path dist -DestinationPath release/dist.zip
+      shell: pwsh
 
     - name: Upload Dist Zip as Artifact
       uses: actions/upload-artifact@v3
