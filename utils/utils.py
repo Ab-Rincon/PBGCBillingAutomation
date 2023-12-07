@@ -37,7 +37,8 @@ def read_excel_data(filename, sheet_name) -> pd.DataFrame:
     # Find the row index where the column 'A' has the value 'Name', this row is likely before the headers
     try: name_row_idx = df_full[df_full.iloc[:,0] == 'Name'].index[0]
     except Exception:
-        logging.exception('A name header was not located. Please ensure the headers are correct.')
+        error_text='A name header was not located. Please ensure the headers are correct.'
+        logging.exception(error_text)
         raise IndexError(error_text)     
     
     # The header is expected to be right after the 'Name' row
