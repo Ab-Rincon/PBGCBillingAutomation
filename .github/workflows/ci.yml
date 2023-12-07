@@ -81,7 +81,6 @@ jobs:
       with:
         files: dist/main.exe
         tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
       env:
