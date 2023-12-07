@@ -56,10 +56,10 @@ jobs:
       run: pip install -r config/requirements.txt
   
     - name: Build Executable
-      run: pyinstaller --onefile \
-        --add-data "config/sheet_template.xlsx;config/" \
-        --add-data "input;input" \
-        --add-data "output;output" \
+      run: pyinstaller --onefile ^
+        --add-data "config/sheet_template.xlsx;config/" ^
+        --add-data "input;input" ^
+        --add-data "output;output" ^
         --add-data "readMe.md;."
         main.py
   
