@@ -79,7 +79,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: dist/main.exe
-        tag_name: ${{ github.ref }}
+        tag_name: v1.0.0
         draft: false
         prerelease: false
       env:
