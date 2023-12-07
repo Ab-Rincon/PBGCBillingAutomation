@@ -63,6 +63,7 @@ jobs:
         --add-data "output;output" \
         --add-data "readMe.md;."
         main.py
+      shell: bash
   
     - name: Upload Executable as Artifact
       uses: actions/upload-artifact@v2
