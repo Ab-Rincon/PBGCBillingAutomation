@@ -55,14 +55,20 @@ jobs:
       run: pip install -r config/requirements.txt
   
     - name: Build Executable
-      run: pyinstaller --onefile --add-data "config/sheet_template.xlsx;config/" --add-data "input;input" --add-data "output;output" --add-data "readMe.md;." main.py
+      run: pyinstaller --onefile --name PBGC_Billing_Automation --add-data "config/sheet_template.xlsx;config/" --add-data "input;input" --add-data "output;output" --add-data "readMe.md;." main.py
    
-    - name: Upload Executable as Artifact
+    - name: Zip Dist Folder
+      run: |
+        mkdir -p release
+        zip -r release/dist.zip dist
+      working-directory: ${{ github.workspace }}
+
+    - name: Upload Dist Zip as Artifact
       uses: actions/upload-artifact@v3
       with:
         name: pbgc-billing-automation-build
-        path: dist
-  
+        path: release/dist.zip
+
   release:
     needs: build
     if: github.ref == 'refs/heads/main'
@@ -71,14 +77,14 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Download Built Executable
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: pbgc-billing-automation-build
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: dist/*
+        files: release/dist.zip
         tag_name: v1.0.0
         draft: false
         prerelease: false
