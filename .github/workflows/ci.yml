@@ -65,6 +65,7 @@ jobs:
   
   release:
     needs: build
+    if: github.ref == 'refs/heads/main'
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
@@ -82,4 +83,4 @@ jobs:
         draft: false
         prerelease: false
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.PBGC_AUTO_GITHUB_TOKEN }}
