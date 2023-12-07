@@ -30,6 +30,7 @@ Follow these steps to process your invoice workbook using the provided applicati
  - It's necessary to have excel installed prior to running the application.
 
 ## Developer Section
+ - Ensure the version is updated in `.github/workflows/ci.yml` when creating new versions
 
 ### To-Do List
  - Rename overbilled section: time mistmatch
