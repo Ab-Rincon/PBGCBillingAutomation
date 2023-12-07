@@ -57,7 +57,7 @@ jobs:
     - name: Build Executable
       run: |
         pyinstaller --onefile --name PBGC_Billing_Automation --add-data "config/sheet_template.xlsx;config/" --add-data "input;input" --add-data "output;output" --add-data "readMe.md;." main.py
-        dir dist /s # Debugging: List contents of dist directory
+        Get-ChildItem -Path .\dist\ -Recurse # Debugging: List contents of dist directory
 
     - name: Create Release Directory
       run: |
@@ -91,7 +91,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: release/dist.zip
-        tag_name: v1.0.1
+        tag_name: v1.0.2
         draft: false
         prerelease: false
       env:
