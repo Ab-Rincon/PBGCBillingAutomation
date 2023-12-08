@@ -90,17 +90,11 @@ jobs:
     - name: List contents of the current directory # Debugging
       run: dir
   
-    - name: Check if the artifact directory exists # Debugging
-      run: Test-Path .\pbgc-billing-automation-build\
-  
-    - name: List contents of the artifact directory # Debugging
-      run: dir .\pbgc-billing-automation-build\
-  
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: .\pbgc-billing-automation-build\dist.zip
-        tag_name: v1.0.2
+        files: dist.zip
+        tag_name: v1.0.3
         draft: false
         prerelease: false
       env:
