@@ -67,8 +67,6 @@ jobs:
     
         # Copy files and directories to the dist folder
         Copy-Item -Path .\config\sheet_template.xlsx -Destination .\dist\config\
-        Copy-Item -Path .\input\* -Destination .\dist\input\ -Recurse
-        Copy-Item -Path .\output\* -Destination .\dist\output\ -Recurse
         Copy-Item -Path .\readMe.md -Destination .\dist\
         Get-ChildItem -Path .\dist\ -Recurse
 
