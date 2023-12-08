@@ -56,8 +56,21 @@ jobs:
 
     - name: Build Executable
       run: |
-        pyinstaller --onefile --name PBGC_Billing_Automation --add-data "config/sheet_template.xlsx;config/" --add-data "input;input/" --add-data "output;output/" --add-data "readMe.md;." main.py
-        Get-ChildItem -Path .\dist\ -Recurse # Debugging: List contents of dist directory
+        pyinstaller --onefile --name PBGC_Billing_Automation main.py
+
+    - name: Manually copy additional files
+      run: |
+        # Ensure the destination directories exist
+        mkdir .\dist\config
+        mkdir .\dist\input
+        mkdir .\dist\output
+    
+        # Copy files and directories to the dist folder
+        Copy-Item -Path .\config\sheet_template.xlsx -Destination .\dist\config\
+        Copy-Item -Path .\input\* -Destination .\dist\input\ -Recurse
+        Copy-Item -Path .\output\* -Destination .\dist\output\ -Recurse
+        Copy-Item -Path .\readMe.md -Destination .\dist\
+        Get-ChildItem -Path .\dist\ -Recurse
 
     - name: Create Release Directory
       run: |
