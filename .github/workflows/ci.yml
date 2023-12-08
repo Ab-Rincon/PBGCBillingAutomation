@@ -56,7 +56,7 @@ jobs:
 
     - name: Build Executable
       run: |
-        pyinstaller --onefile --name PBGC_Billing_Automation --add-data "config/sheet_template.xlsx;config/" --add-data "input;input" --add-data "output;output" --add-data "readMe.md;." main.py
+        pyinstaller --onefile --name PBGC_Billing_Automation --add-data "config/sheet_template.xlsx;config/" --add-data "input;input/" --add-data "output;output/" --add-data "readMe.md;." main.py
         Get-ChildItem -Path .\dist\ -Recurse # Debugging: List contents of dist directory
 
     - name: Create Release Directory
