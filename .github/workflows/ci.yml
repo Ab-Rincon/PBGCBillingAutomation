@@ -87,7 +87,13 @@ jobs:
       with:
         name: pbgc-billing-automation-build
   
-    - name: List contents of the downloaded artifact # Debugging
+    - name: List contents of the current directory # Debugging
+      run: dir
+  
+    - name: Check if the artifact directory exists # Debugging
+      run: Test-Path .\pbgc-billing-automation-build\
+  
+    - name: List contents of the artifact directory # Debugging
       run: dir .\pbgc-billing-automation-build\
   
     - name: Create Release
@@ -99,4 +105,3 @@ jobs:
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.PBGC_AUTO_GITHUB_TOKEN }}
-  
