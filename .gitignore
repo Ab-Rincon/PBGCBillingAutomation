@@ -1,11 +1,5 @@
-
-*.pyc
-*.toc
-build/main/warn-main.txt
-myenv/
+.venv/
 *.log
-build/
-main.spec
-dist/
-directory_structure.txt
 __pycache__/
+input/
+output/
