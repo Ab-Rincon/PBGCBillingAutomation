@@ -235,6 +235,7 @@ def find_workbook_list():
 
     # Get a list of all files in the directory that do not start with "~"
     file_list = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and not f.startswith('~')]
+    file_list = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and not f.startswith('~') and f.endswith('.xlsx')]
     return file_list
 
 def create_overbilled_sheet(overbilled_df: pd.DataFrame, worksheet:str):
