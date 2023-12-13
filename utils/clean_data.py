@@ -50,7 +50,7 @@ class CleanData():
 
         # Apply the function to the 'Date' column of the dataframe
         self.df['T/S'] = self.df['Date'].apply(get_week_start_end_dates)
-        logging.info('Calculated T/S period')
+        logging.info('Calculated T/S periods')
         logging.debug(self.df['T/S'])
 
     def find_empty_comments(self) -> pd.DataFrame:
