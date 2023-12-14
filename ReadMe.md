@@ -32,9 +32,6 @@ Follow these steps to process your invoice workbook using the provided applicati
 ## Developer Section
  - Ensure the version is updated in `.github/workflows/ci.yml` and `ReadMe.md` when creating new versions
 
-### To-Do List
- - Rename overbilled section: time mistmatch
-
 # Notes
 - Comments are removed from the Summary's sheet when flagged for error, which can only occur once per comment. If a problem sheet exists for the WBS, the summary sheet will be incomplete unless manually updated or the comments are fixed prior to the automation running once more.
 - Format issues include but are not limited to:
