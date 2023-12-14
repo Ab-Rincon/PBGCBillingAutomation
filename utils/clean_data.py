@@ -1,17 +1,17 @@
 import re
 import pandas as pd
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import utils.utils as ut
 import utils.format_excel as fe
 import openpyxl
 from config.settings import overbilled_loc
-from datetime import datetime, timedelta
+
 
 def calculate_total_time_difference(in_times, out_times):
     # Initialize a variable to hold the sum of the differences
     total_hours = 0
-    
+
     # Iterate over the paired in and out times
     for in_time, out_time in zip(in_times, out_times):
 
@@ -29,6 +29,7 @@ def calculate_total_time_difference(in_times, out_times):
     total_hours = round(total_hours * 4) / 4
     return total_hours
 
+
 class CleanData():
     def __init__(self, df: pd.DataFrame) -> None:
         self.df = df
@@ -40,10 +41,10 @@ class CleanData():
 
             # Adjust the start of the week to Sunday
             start_of_week = given_date - timedelta(days=(given_date.weekday() + 1) % 7)
-            
+
             # Calculate the end of the week as Saturday
             end_of_week = start_of_week + timedelta(days=6)
-            
+
             # Return the start and end of the week as a formatted string range
             ts_range = f'{start_of_week.strftime(date_format)} - {end_of_week.strftime(date_format)}'
             return ts_range
@@ -67,7 +68,8 @@ class CleanData():
         return empty_comment_df
 
     def extract_times(self) -> pd.DataFrame:
-        if self.df.empty: return self.df
+        if self.df.empty:
+            return self.df
 
         def process_time_entries(row):
             """
@@ -89,8 +91,8 @@ class CleanData():
                 in_times = [in_time for in_time, _ in time_pairs]
                 out_times = [out_time for _, out_time in time_pairs]
 
-                #Special handling for midnight formats
-                out_times = ["23:59" if time == "00:00" or time == "24:00"  or time == "0:00" else time for time in out_times]
+                # Special handling for midnight formats
+                out_times = ["23:59" if time == "00:00" or time == "24:00" or time == "0:00" else time for time in out_times]
 
                 # Match "00:00" or "0:00" as pairs explicitly
                 zero_time_pattern = r"\b\d{1,2}:\d{2}\b"
@@ -122,13 +124,13 @@ class CleanData():
             # Check if the lists are empty which also indicates a format issue
             elif not format_issue and not intimes and not outtimes:
                 format_issue = True
-            
+
             return pd.Series([intimes, outtimes, format_issue], index=['In Times', 'Out Times', 'Format Issue'])
 
-        #Apply proces time entry function to dataframe
+        # Apply proces time entry function to dataframe
         self.df[['In Times', 'Out Times', 'Format Issue']] = self.df.apply(process_time_entries, axis=1)
 
-        #Create format issue dataframe
+        # Create format issue dataframe
         format_issue_df = self.df.loc[self.df['Format Issue'], ['Name', 'T/S', 'Date', 'Format Issue', 'Time Period']]
         logging.info(f'There are {len(format_issue_df.index)} format issues')
 
@@ -136,9 +138,11 @@ class CleanData():
         self.df = self.df.loc[~self.df['Format Issue']]
         self.df.drop('Format Issue', axis=1, inplace=True)
         return format_issue_df
-    
+
     def check_military_time_format(self):
-        if self.df.empty: return self.df
+        if self.df.empty:
+            return self.df
+
         def check_military_time(in_times, out_times) -> bool:
             """
             Check if the time in time out order makes sense
@@ -156,13 +160,14 @@ class CleanData():
                         military_time_issue = True
                         logging.debug(f"in time: {in_time_obj}, out time: {out_time_obj}, military issue: {military_time_issue}")
 
-                except:
+                except Exception as e:
                     military_time_issue = True
+                    logging.debug(f'There is a military time issue. Exception: {e}')
                     return military_time_issue
 
             return military_time_issue
 
-        #apply check military time function to dataframe
+        # apply check military time function to dataframe
         self.df['Military Time Issue'] = self.df.apply(lambda row: check_military_time(row['In Times'], row['Out Times']), axis=1)
 
         # Find military time issues
@@ -175,11 +180,12 @@ class CleanData():
         return military_time_issue_df
 
     def calculate_time_worked(self) -> pd.DataFrame:
-        if self.df.empty: return self.df, self.df
+        if self.df.empty:
+            return self.df, self.df
 
         def format_time_pair(in_times, out_times):
             formatted_times = []
-            
+
             for index, (in_time, out_time) in enumerate(zip(in_times, out_times)):
                 # Parse the time strings to datetime objects
                 in_datetime = pd.to_datetime(in_time, format='%H:%M')
@@ -209,7 +215,7 @@ class CleanData():
         self.df['Commented Time Worked'] = self.df.apply(lambda row: calculate_total_time_difference(row['In Times'], row['Out Times']), axis=1)
         self.df['Formatted Time Comments'] = self.df.apply(lambda row: format_time_pair(row['In Times'], row['Out Times']), axis=1)
 
-        #Calculate time charged
+        # Calculate time charged
         self.df['Total Hours Worked'] = self.df.groupby(['Name', 'Date'])['Hours Worked'].transform('sum')
 
         # Calcaulate where
@@ -223,25 +229,26 @@ class CleanData():
 
         # Determine if there's is a conflicting time in and time out for the same date
         self.df['Conflicting Comment'] = ""
-        self.df['Conflicting Comment'] = (self.df['Unique In Times'] > 1) | (self.df['Unique Out Times'] > 1)# | (self.df['Commented Time Worked'] < self.df['Total Hours Worked'])
+        self.df['Conflicting Comment'] = (self.df['Unique In Times'] > 1) | (self.df['Unique Out Times'] > 1)
         conflicting_comment_df = self.df.loc[self.df['Conflicting Comment'], ['Name', 'T/S', 'Date', 'Conflicting Comment', 'Time Period']]
         logging.info(f'There are {len(conflicting_comment_df.index)} conflicting time comments')
         self.df = self.df.loc[~self.df['Conflicting Comment']]
         self.df.drop('Conflicting Comment', axis=1, inplace=True)
-        
+
         # Clean up temporary columns
         self.df.drop(['In Times Str', 'Out Times Str', 'Unique In Times', 'Unique Out Times'], axis=1, inplace=True)
 
-        #Create acceptable comment df
-        acceptable_df = self.df[['Name', 'T/S', 'Date', 'Time Period','Formatted Time Comments']]
+        # Create acceptable comment df
+        acceptable_df = self.df[['Name', 'T/S', 'Date', 'Time Period', 'Formatted Time Comments']]
         logging.info(f'There are {len(acceptable_df.index)} acceptable time comments')
         return conflicting_comment_df, acceptable_df
 
-def calc_total_billed_n_comment(invoice_sheet_name:str, invoice_sheet_names: list, dataframes: dict, workbook_filename:str) -> pd.DataFrame:
+
+def calc_total_billed_n_comment(invoice_sheet_name: str, invoice_sheet_names: list, dataframes: dict, workbook_filename: str) -> pd.DataFrame:
     summary_df = dataframes['Summary']
     workbook_df = dataframes['Mismatch']
 
-    #Concat charge code sheet data
+    # Concat charge code sheet data
     if invoice_sheet_name == invoice_sheet_names[0]:
         workbook_df = summary_df
         return workbook_df
@@ -258,21 +265,23 @@ def calc_total_billed_n_comment(invoice_sheet_name:str, invoice_sheet_names: lis
     workbook_df['Conflicting Time Worked'] = workbook_df['Daily Total Hours Worked'] > workbook_df['Daily Commented Time Worked']
 
     # Save the subset with conflicts to another CSV
-    overbilled_df = workbook_df.loc[workbook_df['Conflicting Time Worked'], ['Name', 'T/S', 'Date', 'Charge Code', 'Conflicting Time Worked', 'Time Period', 'Total Hours Worked', 'Commented Time Worked', 'Daily Total Hours Worked', 'Daily Commented Time Worked']]
+    subset_columns = ['Name', 'T/S', 'Date', 'Charge Code', 'Conflicting Time Worked', 'Time Period', 'Total Hours Worked',
+                      'Commented Time Worked', 'Daily Total Hours Worked', 'Daily Commented Time Worked']
+    overbilled_df = workbook_df.loc[workbook_df['Conflicting Time Worked'], subset_columns]
     overbilled_df.sort_values(['Name', 'Date'], ascending=[True, False], inplace=True)
     logging.info(f'There are {len(overbilled_df.index)} mismatched time comments')
 
-    #Create overbilled sheet
+    # Create overbilled sheet
     workbook = openpyxl.load_workbook(workbook_filename)
     worksheet = workbook['Mismatch']
     template_sheet = 'Mismatch'
     locations = overbilled_loc
-    
+
     # Paste values into workbook
     empty_df = ut.create_overbilled_sheet(overbilled_df, worksheet)
 
     # if there are values format the workbook then move it first
-    if not empty_df: 
+    if not empty_df:
         fe.format_sheet(workbook, workbook_filename, worksheet, template_sheet, locations, dataframes)
         workbook.move_sheet(worksheet, -len(workbook.sheetnames))
         workbook.save(workbook_filename)
