@@ -3,7 +3,7 @@ import logging
 import os
 import openpyxl
 import xlwings as xw
-from config.settings import template_sheets, summary_loc, problem_loc, detail_loc, overbilled_loc, blacklist_charge_codes
+from config.settings import template_sheets, summary_loc, problem_loc, detail_loc, overbilled_loc, blacklist_charge_codes  # noqa: F401
 from openpyxl.styles import Alignment  # , Font
 
 
@@ -162,7 +162,7 @@ def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
         # Paste problem DataFrame headers and data for 'Name' and 'Date' columns
         problem_headers = df[['Name', 'Date']].columns
         for c, header in enumerate(problem_headers, start=problem_loc[key]['col']):
-            problem_sheet.cell(row=problem_loc[key]['row']-1, column=c).value = header
+            problem_sheet.cell(row=problem_loc[key]['row'] - 1, column=c).value = header
 
         for r, row_data in enumerate(df[['Name', 'Date']].values, start=problem_loc[key]['row']):
             for c, value in enumerate(row_data, start=problem_loc[key]['col']):
@@ -171,7 +171,7 @@ def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
         # Paste detail DataFrame headers and data
         detail_headers = df.columns
         for c, header in enumerate(detail_headers, start=detail_loc[key]['col']):
-            detail_sheet.cell(row=detail_loc[key]['row']-1, column=c).value = header
+            detail_sheet.cell(row=detail_loc[key]['row'] - 1, column=c).value = header
 
         for r, row_data in enumerate(df.values, start=detail_loc[key]['row']):
             for c, value in enumerate(row_data, start=detail_loc[key]['col']):
@@ -190,13 +190,19 @@ def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
     summary_sheet = workbook[summary_sheet_name]
 
     key = "Summary"
-    df = dataframes[key].drop_duplicates(subset=["Name", "Date", "Formatted Time Comments"])
+    df = dataframes[key].drop_duplicates(subset=["Name", "Date", "Formatted Time Comments"], ignore_index = True)
     if df.empty:
         del workbook[summary_sheet_name]
         workbook.save(excel_file)
-        return all_df_empty
+        logging.info('The summary sheet is empty. Deleted the summary sheet')
+        return
 
-    previous_name = df['Name'][0]
+    try:
+        previous_name = df.loc[0, 'Name']
+    except Exception as e:
+        logging.info(f'There is an error: {e}. The summary dataframe is: {df}')
+        raise
+
     subtotal = 0
     df_rows = df[['Name', 'Date', 'Total Hours Worked', 'Formatted Time Comments']].values
     write_row = summary_loc[key]['row']
@@ -251,7 +257,7 @@ def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
     # Save the workbook
     workbook.save(excel_file)
     logging.info("Pasted problematic data into relevant sheets")
-    return all_df_empty
+    return
 
 
 def list_visible_sheets_in_workbook(workbook_path) -> tuple[str, pd.DataFrame]:
@@ -286,8 +292,8 @@ def find_workbook_list():
     folder_path = 'input/'
 
     # Get a list of all files in the directory that do not start with "~"
-    file_list = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))
-                 and not f.startswith('~') and f.endswith('.xlsx')]
+    file_list = [f for f in os.listdir(folder_path) if
+                 os.path.isfile(os.path.join(folder_path, f)) and not f.startswith('~') and f.endswith('.xlsx')]
     return file_list
 
 
@@ -302,7 +308,7 @@ def create_overbilled_sheet(overbilled_df: pd.DataFrame, worksheet: str):
 
     # Add data to overbilled worksheet including headers
     for c, header in enumerate(overbilled_df.columns, start=overbilled_loc[key]['col']):
-        worksheet.cell(row=overbilled_loc[key]['row']-1, column=c).value = header
+        worksheet.cell(row=overbilled_loc[key]['row'] - 1, column=c).value = header
 
     for r, row_data in enumerate(overbilled_df.values, start=overbilled_loc[key]['row']):
         for c, value in enumerate(row_data, start=overbilled_loc[key]['col']):

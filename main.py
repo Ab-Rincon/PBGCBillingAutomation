@@ -59,9 +59,7 @@ def main():
             mismatch_df = cd.calc_total_billed_n_comment(invoice_sheet_name, invoice_sheet_names, dataframes, workbook_filename)
 
             # Paste data from dataframes into worksheets
-            no_problems = ut.paste_all_to_excel(dataframes, workbook_filename, invoice_sheet_name)
-            if no_problems:
-                continue
+            ut.paste_all_to_excel(dataframes, workbook_filename, invoice_sheet_name)
 
             # Format worksheets
             fe.format_all_code_sheets(workbook_filename, dataframes, invoice_sheet_name)

@@ -2,7 +2,7 @@ import openpyxl
 import logging
 from openpyxl.styles import PatternFill, Border, Side
 from openpyxl.styles import Alignment
-from config.settings import template_sheets
+from config.settings import template_sheets, summary_loc, problem_loc, detail_loc, overbilled_loc
 from openpyxl.utils import get_column_letter
 
 
@@ -47,7 +47,7 @@ def insert_page_break(worksheet):
 
 def add_summary_name_block(worksheet, locations):
     # Loop through the rows of the worksheet
-    for row in range(locations['Summary']["row"]+1, worksheet.max_row + 1):  # Assuming you start checking from the second row
+    for row in range(locations['Summary']["row"] + 1, worksheet.max_row + 1):  # Assuming you start checking from the second row
         # Check if the value in column B of the current row is different from the previous row
         if worksheet[f"B{row}"].value != worksheet[f"B{row-1}"].value:
             # If it is, apply the border to columns B through E for the current row
@@ -106,7 +106,7 @@ def format_all_code_sheets(workbook_filename, dataframes, invoice_sheet_name):
         #    wrap_text_col(worksheet, 'Y', 'Y2')
 
         # Do special formatting for the summary worksheet
-        if template_sheet == "Summary":
+        if template_sheet == 'Summary':
 
             # Make borders for summary sheet
             add_summary_name_block(worksheet, locations)
@@ -168,14 +168,14 @@ def create_border_and_align_worsheet(template_sheet, worksheet, locations, dataf
         start_col = locations[key]["col"]
 
         # Center titles for data
-        for cell in worksheet[start_row+1]:
+        for cell in worksheet[start_row + 1]:
             if template_sheet == "Summary":
                 continue
             cell.alignment = Alignment(horizontal="center")
 
         # Find the end column for the data
         end_col = start_col
-        while worksheet.cell(row=start_row+1, column=end_col).value and end_col <= worksheet.max_column:
+        while worksheet.cell(row=start_row + 1, column=end_col).value and end_col <= worksheet.max_column:
             end_col += 1
         end_col -= 1
 
@@ -192,7 +192,7 @@ def create_border_and_align_worsheet(template_sheet, worksheet, locations, dataf
         thick_border_right = Border(right=Side(style='medium'))
 
         # Apply top and bottom borders
-        for col in range(start_col, end_col+1):
+        for col in range(start_col, end_col + 1):
             current_cell = worksheet.cell(row=start_row, column=col)
             current_cell.border = combine_borders(current_cell.border, thick_border_top)
 
