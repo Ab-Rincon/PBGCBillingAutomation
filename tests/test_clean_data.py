@@ -1,5 +1,7 @@
-import pandas as pd, unittest
+import pandas as pd
+import unittest
 from utils.clean_data import CleanData, calculate_total_time_difference
+
 
 class TestCleanDataClass(unittest.TestCase):
 
