@@ -5,7 +5,6 @@ problem_loc = {
     "Empty": {"row": 4, "col": 2},
     "Format": {"row": 4, "col": 5},
     "Military": {"row": 4, "col": 8},
-    #"OverBilled": {"row": 4, "col": 11},
     "ConflictingTime": {"row": 4, "col": 11},
     "Acceptable": {"row": 4, "col": 14}
 }
@@ -14,7 +13,6 @@ detail_loc = {
     "Empty": {"row": 4, "col": 2},
     "Format": {"row": 4, "col": 8},
     "Military": {"row": 4, "col": 14},
-    #"OverBilled": {"row": 4, "col": 17},
     "ConflictingTime": {"row": 4, "col": 20},
     "Acceptable": {"row": 4, "col": 26}
 }
