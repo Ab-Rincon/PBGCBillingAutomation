@@ -1,8 +1,11 @@
-import pandas as pd, logging, os
+import pandas as pd
+import logging
+import os
 import openpyxl
 import xlwings as xw
-import utils.clean_data as cd
 from config.settings import template_sheets, summary_loc, problem_loc, detail_loc, overbilled_loc, blacklist_charge_codes
+from openpyxl.styles import Alignment  # , Font
+
 
 def set_logger():
     """
@@ -29,26 +32,28 @@ def set_logger():
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
+
 def read_excel_data(filename, sheet_name) -> pd.DataFrame:
     logging.info(f"The current sheet is: {sheet_name}")
     # Read the first column to determine where the data starts
     df_full = pd.read_excel(f'input/{filename}', sheet_name=sheet_name, usecols=[0], engine='openpyxl')
-    
+
     # Find the row index where the column 'A' has the value 'Name', this row is likely before the headers
-    try: name_row_idx = df_full[df_full.iloc[:,0] == 'Name'].index[0]
+    try:
+        name_row_idx = df_full[df_full.iloc[:, 0] == 'Name'].index[0]
     except Exception:
-        error_text='A name header was not located. Please ensure the headers are correct.'
+        error_text = 'A name header was not located. Please ensure the headers are correct.'
         logging.exception(error_text)
-        raise IndexError(error_text)     
-    
+        raise IndexError(error_text)
+
     # The header is expected to be right after the 'Name' row
     header_row_idx = name_row_idx + 1
-    if header_row_idx > 10: 
+    if header_row_idx > 10:
         error_text = f'Please insure that the proper headers are include in the input file. It appears a little high at row {name_row_idx}'
         logging.warn(error_text)
 
     # Find the last non-empty cell in the first column to determine how many rows of data there are
-    non_empty_rows = df_full.iloc[:,0].dropna().index
+    non_empty_rows = df_full.iloc[:, 0].dropna().index
     last_data_row_idx = non_empty_rows[-1] if non_empty_rows.size > 0 else header_row_idx
 
     # Calculate number of rows to read
@@ -66,9 +71,11 @@ def read_excel_data(filename, sheet_name) -> pd.DataFrame:
     )
 
     # Convert the column to datetime format (if not already)
-    try: df['Date'] = pd.to_datetime(df['Date'])
-    except Exception: 
-        error_text = 'There was an error in converting the date column to date format. Please review the input file to ensure every row in the date column is in fact a date.'
+    try:
+        df['Date'] = pd.to_datetime(df['Date'])
+    except Exception:
+        error_text = 'There was an error in converting the date column to date format. '
+        error_text += 'Please review the input file to ensure every row in the date column is in fact a date.'
         logging.exception(error_text)
         raise TypeError(error_text)
 
@@ -82,6 +89,7 @@ def read_excel_data(filename, sheet_name) -> pd.DataFrame:
 
     return df
 
+
 def copy_and_rename_excel(filename, invoice_sheet_names):
     # Filenames
     destination_filename = filename.split(" Invoice")[0]
@@ -93,23 +101,25 @@ def copy_and_rename_excel(filename, invoice_sheet_names):
         with open(source_path, 'rb') as source_file:
             with open(destination_path, 'wb') as dest_file:
                 dest_file.write(source_file.read())
-    
+
     # Start Excel in the background
     app = xw.App(visible=False)
-    
+
     # Open both workbooks using the App instance
     source_wb = app.books.open(source_path)
     target_wb = app.books.open(destination_path)
 
     for invoice_sheet_name in invoice_sheet_names:
         for sheet_name in template_sheets:
-            if sheet_name == "Mismatch": continue
+            if sheet_name == "Mismatch":
+                continue
 
             # Access the source sheet
             source_sheet = source_wb.sheets[sheet_name]
 
             # Copy the source sheet to the target workbook if it's not the first itteration
-            if invoice_sheet_name != invoice_sheet_names[0]: source_sheet.api.Copy(Before=target_wb.sheets[0].api)
+            if invoice_sheet_name != invoice_sheet_names[0]:
+                source_sheet.api.Copy(Before=target_wb.sheets[0].api)
 
             # Rename the copied sheet in the target workbook
             target_wb.sheets[sheet_name].name = f'{invoice_sheet_name}_{sheet_name}'
@@ -120,23 +130,26 @@ def copy_and_rename_excel(filename, invoice_sheet_names):
 
     # Close the source workbook without saving changes
     source_wb.close()
-    
+
     # Quit the app instance to close Excel
     app.quit()
 
     logging.info(f"Appended sheets from {source_path} to {destination_path}.")
     return destination_path
 
+
 def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
     # Load the existing workbook
     workbook = openpyxl.load_workbook(excel_file)
-    
+
     all_df_empty = True
     for key, df in dataframes.items():
-        if key == "Summary" or key == "Mismatch" or df.empty: continue
+        if key == "Summary" or key == "Mismatch" or df.empty:
+            continue
 
-        #Check if the dataframe is empty
-        if key != 'Acceptable': all_df_empty = False
+        # Check if the dataframe is empty
+        if key != 'Acceptable':
+            all_df_empty = False
 
         # Define problem and detail sheet names
         problem_sheet_name = f'{invoice_sheet_name}_Problem'
@@ -164,7 +177,7 @@ def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
             for c, value in enumerate(row_data, start=detail_loc[key]['col']):
                 detail_sheet.cell(row=r, column=c).value = value
         logging.debug(f"Pasted sheet {key}")
-    
+
     # If all dataframes are empty, delete the sheets
     if all_df_empty:
         for sheet_name in [f'{invoice_sheet_name}_Problem', f'{invoice_sheet_name}_Detail']:
@@ -175,6 +188,7 @@ def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
     # Paste summary DataFrame headers and data
     summary_sheet_name = f'{invoice_sheet_name}_Summary'
     summary_sheet = workbook[summary_sheet_name]
+
     key = "Summary"
     df = dataframes[key].drop_duplicates(subset=["Name", "Date", "Formatted Time Comments"])
     if df.empty:
@@ -182,18 +196,54 @@ def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
         workbook.save(excel_file)
         return all_df_empty
 
-    for r, row_data in enumerate(df[['Name', 'Date', 'Total Hours Worked','Formatted Time Comments']].values, start=summary_loc[key]['row']):
+    previous_name = df['Name'][0]
+    subtotal = 0
+    df_rows = df[['Name', 'Date', 'Total Hours Worked', 'Formatted Time Comments']].values
+    write_row = summary_loc[key]['row']
+
+    for r, row_data in enumerate(df_rows, start=1):
+        current_name = row_data[0]
+        total_hours_worked = row_data[2]
+
+        # Check if the name has changed or it's the last row
+        is_last_row = r == len(df_rows)
+        if current_name != previous_name:
+            # Insert subtotal row and bold the text
+            summary_sheet.cell(row=write_row, column=summary_loc[key]['col']).value = f'{previous_name or current_name}'
+            summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).value = f'Subtotal: {subtotal} Hours'
+            # summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).font = Font(bold=True) Removed I wasn't a big fan of how it looked
+            summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).alignment = Alignment(horizontal='right')
+
+            # Reset subtotal for the next set of rows
+            subtotal = 0
+            write_row += 1  # Move to the next row for subtotal
+
+            # Update previous_name and increment write_row for the next data entry
+            previous_name = current_name
+
+        # Update the subtotal
+        subtotal += total_hours_worked
+
+        # Write current row data to the Excel sheet
         for c, value in enumerate(row_data, start=summary_loc[key]['col']):
-            summary_sheet.cell(row=r, column=c).value = value
-    
-    #Insert Month in summary
+            summary_sheet.cell(row=write_row, column=c).value = value
+        write_row += 1
+
+        if is_last_row:
+            # Insert subtotal row and bold the text
+            summary_sheet.cell(row=write_row, column=summary_loc[key]['col']).value = f'{previous_name or current_name}'
+            summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).value = f'Subtotal: {subtotal} Hours'
+            # summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).font = Font(bold=True) Removed I wasn't a big fan of how it looked
+            summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).alignment = Alignment(horizontal='right')
+
+    # Insert Month in summary
     month = excel_file.split()[1]
     year = excel_file.split()[2]
     month_text = f'Month: {month} {year}'
-    #contract_number = f'Contract Number: {invoice_sheet_name}'
+    # contract_number = f'Contract Number: {invoice_sheet_name}'
 
-    #Insert contract number
-    #summary_sheet["B4"] = contract_number
+    # Insert contract number
+    # summary_sheet["B4"] = contract_number
 
     # Insert the value into the specified cell
     summary_sheet["B6"] = month_text
@@ -202,6 +252,7 @@ def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
     workbook.save(excel_file)
     logging.info("Pasted problematic data into relevant sheets")
     return all_df_empty
+
 
 def list_visible_sheets_in_workbook(workbook_path) -> tuple[str, pd.DataFrame]:
     logging.info(f"The current workbook is: {workbook_path}")
@@ -223,9 +274,10 @@ def list_visible_sheets_in_workbook(workbook_path) -> tuple[str, pd.DataFrame]:
         print(f"{destination_path} has been deleted.")
     except FileNotFoundError:
         print(f"{destination_path} not found.")
-    
+
     logging.info(f'List of visible sheets: {visible_sheet_names}')
     return visible_sheet_names
+
 
 def find_workbook_list():
     import os
@@ -234,19 +286,20 @@ def find_workbook_list():
     folder_path = 'input/'
 
     # Get a list of all files in the directory that do not start with "~"
-    file_list = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and not f.startswith('~')]
-    file_list = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and not f.startswith('~') and f.endswith('.xlsx')]
+    file_list = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))
+                 and not f.startswith('~') and f.endswith('.xlsx')]
     return file_list
 
-def create_overbilled_sheet(overbilled_df: pd.DataFrame, worksheet:str):
+
+def create_overbilled_sheet(overbilled_df: pd.DataFrame, worksheet: str):
     key = "Mismatch"
     empty_df = False
-    
+
     # Paste summary DataFrame headers and data
     if overbilled_df.empty:
         del worksheet
         return True
-    
+
     # Add data to overbilled worksheet including headers
     for c, header in enumerate(overbilled_df.columns, start=overbilled_loc[key]['col']):
         worksheet.cell(row=overbilled_loc[key]['row']-1, column=c).value = header
