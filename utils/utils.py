@@ -190,7 +190,7 @@ def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
     summary_sheet = workbook[summary_sheet_name]
 
     key = "Summary"
-    df = dataframes[key].drop_duplicates(subset=["Name", "Date", "Formatted Time Comments"], ignore_index = True)
+    df = dataframes[key].drop_duplicates(subset=["Name", "Date", "Formatted Time Comments"], ignore_index=True)
     if df.empty:
         del workbook[summary_sheet_name]
         workbook.save(excel_file)
