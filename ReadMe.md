@@ -35,8 +35,8 @@ Follow these steps to process your invoice workbook using the provided applicati
 ### To-Do List
  - Rename overbilled section: time mistmatch
 
-### Developer Notes
-1. Comments are removed when flagged for error, which can only occur once per comment.
+# Notes
+1. Comments are removed from the Summarys sheet when flagged for error, which can only occur once per comment. If a problem sheet exists for the WBS, the summary sheet will be incomplete unless manually updated or the comments are fixed prior to the automation running once more.
 2. Format issues include but are not limited to:
    - Disorganized time stamps not following the format "Time in: HH:MM - Time Out: HH:MM."
    - Mismatched counts of time in and time out entries.
