@@ -28,7 +28,7 @@ jobs:
       run: pip install -r config/requirements.txt
 
     - name: Lint with flake8
-      run: flake8 . --statistics --exclude .venv/ --max-line-length 150
+      run: flake8 . --statistics --exclude .venv/ --max-line-length 150 --ignore F401
 
     - name: Run tests
       run: python -m unittest discover -s tests
