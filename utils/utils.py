@@ -138,7 +138,7 @@ def copy_and_rename_excel(filename, invoice_sheet_names):
     return destination_path
 
 
-def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
+def paste_all_to_excel(dataframes: dict[str, pd.DataFrame], excel_file, invoice_sheet_name):
     # Load the existing workbook
     workbook = openpyxl.load_workbook(excel_file)
 
@@ -190,48 +190,44 @@ def paste_all_to_excel(dataframes: dict, excel_file, invoice_sheet_name):
     summary_sheet = workbook[summary_sheet_name]
 
     key = "Summary"
-    df = dataframes[key].drop_duplicates(subset=["Name", "Date", "Formatted Time Comments"], ignore_index=True)
-    if df.empty:
+    summary_df = dataframes[key]
+
+    if summary_df.empty:
         del workbook[summary_sheet_name]
         workbook.save(excel_file)
         logging.info('The summary sheet is empty. Deleted the summary sheet')
         return
 
     try:
-        previous_name = df.loc[0, 'Name']
+        previous_name = summary_df.loc[0, 'Name']
+        previous_subtotal = summary_df.loc[0, 'Subtotal']
     except Exception as e:
-        logging.info(f'There is an error: {e}. The summary dataframe is: {df}')
+        logging.info(f'There is an error: {e}. The summary dataframe is: {summary_df}')
         raise
 
-    subtotal = 0
-    df_rows = df[['Name', 'Date', 'Total Hours Worked', 'Formatted Time Comments']].values
+    df_rows = summary_df[['Name', 'Date', 'Total Hours Worked', 'Formatted Time Comments', 'Subtotal']].values
     write_row = summary_loc[key]['row']
 
     for r, row_data in enumerate(df_rows, start=1):
         current_name = row_data[0]
-        total_hours_worked = row_data[2]
+        subtotal = row_data[4]
 
         # Check if the name has changed or it's the last row
-        is_last_row = r == len(df_rows)
+        is_last_row = (r == len(df_rows))
         if current_name != previous_name:
             # Insert subtotal row and bold the text
-            summary_sheet.cell(row=write_row, column=summary_loc[key]['col']).value = f'{previous_name or current_name}'
-            summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).value = f'Subtotal: {subtotal} Hours'
+            summary_sheet.cell(row=write_row, column=summary_loc[key]['col']).value = previous_name
+            summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).value = f'Subtotal: {previous_subtotal} Hours'
             # summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).font = Font(bold=True) Removed I wasn't a big fan of how it looked
             summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).alignment = Alignment(horizontal='right')
-
-            # Reset subtotal for the next set of rows
-            subtotal = 0
-            write_row += 1  # Move to the next row for subtotal
-
+            write_row += 1
+            
             # Update previous_name and increment write_row for the next data entry
             previous_name = current_name
-
-        # Update the subtotal
-        subtotal += total_hours_worked
+            previous_subtotal = subtotal
 
         # Write current row data to the Excel sheet
-        for c, value in enumerate(row_data, start=summary_loc[key]['col']):
+        for c, value in enumerate(row_data[:-1], start=summary_loc[key]['col']): # row_data[:-1] skips subtotal column
             summary_sheet.cell(row=write_row, column=c).value = value
         write_row += 1
 

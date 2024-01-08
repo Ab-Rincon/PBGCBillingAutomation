@@ -41,6 +41,9 @@ def main():
             # Calculate time worked
             differing_time_df, acceptable_df = clean_df.calculate_time_worked()
 
+            # Clean and calcualte subtotals for summar sheet
+            final_df = clean_df.clean_summary_df()
+
             # Extract final dataframe
             final_df = clean_df.df
 
