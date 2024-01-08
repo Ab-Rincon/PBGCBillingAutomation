@@ -242,17 +242,17 @@ class CleanData():
         acceptable_df = self.df[['Name', 'T/S', 'Date', 'Time Period', 'Formatted Time Comments']]
         logging.info(f'There are {len(acceptable_df.index)} acceptable time comments')
         return conflicting_comment_df, acceptable_df
-    
+
     def clean_summary_df(self):
         self.df.drop_duplicates(subset=["Name", "Date", "Formatted Time Comments"], ignore_index=True, inplace=True)
         self.df.sort_values(by=['Name', 'Date'], inplace=True)
         self.df.reset_index(inplace=True)
-        
+
         self.df['Subtotal'] = ''
         self.df['Subtotal'] = self.df.groupby(['Name'])['Total Hours Worked'].transform('sum')
         logging.debug(self.df.to_string())
         return self.df
-        
+
 
 def calc_total_billed_n_comment(invoice_sheet_name: str, invoice_sheet_names: list, dataframes: dict[str, pd.DataFrame], workbook_filename: str) -> pd.DataFrame:
     summary_df = dataframes['Summary']

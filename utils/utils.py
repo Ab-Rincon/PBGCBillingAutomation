@@ -221,13 +221,13 @@ def paste_all_to_excel(dataframes: dict[str, pd.DataFrame], excel_file, invoice_
             # summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).font = Font(bold=True) Removed I wasn't a big fan of how it looked
             summary_sheet.cell(row=write_row, column=summary_loc[key]['col'] + 3).alignment = Alignment(horizontal='right')
             write_row += 1
-            
+
             # Update previous_name and increment write_row for the next data entry
             previous_name = current_name
             previous_subtotal = subtotal
 
         # Write current row data to the Excel sheet
-        for c, value in enumerate(row_data[:-1], start=summary_loc[key]['col']): # row_data[:-1] skips subtotal column
+        for c, value in enumerate(row_data[:-1], start=summary_loc[key]['col']):  # row_data[:-1] skips subtotal column
             summary_sheet.cell(row=write_row, column=c).value = value
         write_row += 1
 

@@ -2,7 +2,7 @@ import openpyxl
 import logging
 from openpyxl.styles import PatternFill, Border, Side
 from openpyxl.styles import Alignment
-from config.settings import template_sheets, summary_loc, problem_loc, detail_loc, overbilled_loc
+from config.settings import template_sheets, summary_loc, problem_loc, detail_loc, overbilled_loc  # noqa
 from openpyxl.utils import get_column_letter
 
 
