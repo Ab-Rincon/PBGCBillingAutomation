@@ -1,7 +1,6 @@
-# Invoice Processing Application
-### Version 1.0.4
+# Invoice Processing Application v1.0.5
 
-# Invoice Processing Instructions
+## Invoice Processing Instructions
 
 Follow these steps to process your invoice workbook using the provided application.
 

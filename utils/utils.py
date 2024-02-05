@@ -273,9 +273,9 @@ def list_visible_sheets_in_workbook(workbook_path) -> tuple[str, pd.DataFrame]:
     # Delete destination workbook if it exists
     try:
         os.remove(destination_path)
-        print(f"{destination_path} has been deleted.")
+        logging.warning(f"{destination_path} has been deleted.")
     except FileNotFoundError:
-        print(f"{destination_path} not found.")
+        logging.debug(f"{destination_path} not found.")
 
     logging.info(f'List of visible sheets: {visible_sheet_names}')
     return visible_sheet_names

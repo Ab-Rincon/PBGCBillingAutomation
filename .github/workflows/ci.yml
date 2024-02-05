@@ -105,7 +105,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: dist.zip
-        tag_name: v1.0.4
+        tag_name: v1.0.5
         draft: false
         prerelease: false
       env:
